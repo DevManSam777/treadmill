@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treadmill Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Treadmill Tracker</h1>
+
+        <div class="input-section">
+            <h2>Log New Session</h2>
+            <div class="input-group">
+                <div class="form-field">
+                    <label for="date">Date</label>
+                    <input type="date" id="date">
+                </div>
+                <div class="form-field">
+                    <label for="distance">Distance (miles)</label>
+                    <input type="number" id="distance" step="0.1" placeholder="e.g., 3.2">
+                </div>
+                <div class="form-field">
+                    <label for="duration">Duration (minutes)</label>
+                    <input type="number" id="duration" placeholder="e.g., 30">
+                </div>
+                <button onclick="addSession()">Add Session</button>
+            </div>
+        </div>
+
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <h3>Total Distance</h3>
+                <div class="value" id="totalDistance">0 mi</div>
+            </div>
+            <div class="stat-card">
+                <h3>Sessions</h3>
+                <div class="value" id="totalSessions">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Avg Distance</h3>
+                <div class="value" id="avgDistance">0 mi</div>
+            </div>
+            <div class="stat-card">
+                <h3>Current Streak</h3>
+                <div class="value" id="streak">0 days</div>
+            </div>
+            <div class="stat-card">
+                <h3>This Week</h3>
+                <div class="value" id="weekTotal">0 mi</div>
+            </div>
+            <div class="stat-card">
+                <h3>This Month</h3>
+                <div class="value" id="monthTotal">0 mi</div>
+            </div>
+        </div>
+
+        <div class="charts-section">
+            <div class="chart-container">
+                <h3>Weekly Trend</h3>
+                <canvas id="weeklyChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3>Monthly Trend</h3>
+                <canvas id="monthlyChart"></canvas>
+            </div>
+        </div>
+
+        <div class="table-section">
+            <h2>Session History</h2>
+            <table id="sessionTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Distance (miles)</th>
+                        <th>Duration (min)</th>
+                        <th>Speed (mph)</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>
+            <div class="empty-state" id="emptyState">No sessions yet. Add your first workout!</div>
+        </div>
+    </div>
+
+    <script src="tracker.js"></script>
+</body>
+</html>
