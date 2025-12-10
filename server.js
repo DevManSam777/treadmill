@@ -1,11 +1,50 @@
+require('dotenv').config();
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Authentication configuration
+const AUTH_USERNAME = process.env.AUTH_USERNAME || 'admin';
+const AUTH_PASSWORD = process.env.AUTH_PASSWORD || 'password123';
+const TOKEN_EXPIRY_DAYS = 30;
+
+// Token storage (in memory)
+const tokens = new Map();
+
+// Helper function to generate token
+function generateToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+// Helper function to validate token
+function validateToken(token) {
+  if (!tokens.has(token)) return false;
+  const expiry = tokens.get(token);
+  if (Date.now() > expiry) {
+    tokens.delete(token);
+    return false;
+  }
+  return true;
+}
+
+// Authentication middleware
+function requireAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  const token = authHeader.slice(7);
+  if (!validateToken(token)) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+  next();
+}
 
 // Middleware
 app.use(cors());
@@ -44,8 +83,26 @@ function initializeDatabase() {
 
 // API Routes
 
+// Login endpoint
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password required' });
+  }
+
+  if (username === AUTH_USERNAME && password === AUTH_PASSWORD) {
+    const token = generateToken();
+    const expiry = Date.now() + (TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+    tokens.set(token, expiry);
+    return res.json({ token });
+  }
+
+  res.status(401).json({ error: 'Invalid credentials' });
+});
+
 // Get all sessions
-app.get('/api/sessions', (req, res) => {
+app.get('/api/sessions', requireAuth, (req, res) => {
   db.all('SELECT * FROM sessions ORDER BY date DESC', [], (err, rows) => {
     if (err) {
       res.status(500).json({ error: err.message });
@@ -56,7 +113,7 @@ app.get('/api/sessions', (req, res) => {
 });
 
 // Add a new session
-app.post('/api/sessions', (req, res) => {
+app.post('/api/sessions', requireAuth, (req, res) => {
   const { date, distance, duration } = req.body;
 
   if (!date || !distance || !duration) {
@@ -77,7 +134,7 @@ app.post('/api/sessions', (req, res) => {
 });
 
 // Delete a session
-app.delete('/api/sessions/:id', (req, res) => {
+app.delete('/api/sessions/:id', requireAuth, (req, res) => {
   const { id } = req.params;
 
   db.run('DELETE FROM sessions WHERE id = ?', [id], function(err) {

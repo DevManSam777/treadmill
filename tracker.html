@@ -8,8 +8,31 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Treadmill Tracker</h1>
+    <div id="loginForm" class="login-container">
+        <div class="login-card">
+            <h1>Treadmill Tracker</h1>
+            <p>Enter your credentials to continue</p>
+            <div class="login-input-group">
+                <div class="login-field">
+                    <label for="loginUsername">Username</label>
+                    <input type="text" id="loginUsername" placeholder="Username">
+                </div>
+                <div class="login-field">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Password">
+                </div>
+                <button onclick="handleLogin()" class="login-button">Login</button>
+                <div id="loginError" class="login-error"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="appContent" class="app-content" style="display: none;">
+        <div class="container">
+            <div class="header">
+                <h1>Treadmill Tracker</h1>
+                <button onclick="handleLogout()" class="logout-button">Logout</button>
+            </div>
 
         <div class="input-section">
             <h2>Log New Session</h2>
@@ -84,6 +107,7 @@
                 </tbody>
             </table>
             <div class="empty-state" id="emptyState">No sessions yet. Add your first workout!</div>
+        </div>
         </div>
     </div>
 

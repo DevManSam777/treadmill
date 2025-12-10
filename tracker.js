@@ -3,6 +3,88 @@ let weeklyChart = null;
 let monthlyChart = null;
 const API_URL = '/api';
 
+// Authentication functions
+function getAuthToken() {
+    return localStorage.getItem('authToken');
+}
+
+function saveAuthToken(token) {
+    localStorage.setItem('authToken', token);
+}
+
+function clearAuthToken() {
+    localStorage.removeItem('authToken');
+}
+
+function getAuthHeaders() {
+    const token = getAuthToken();
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    };
+}
+
+async function handleLogin() {
+    const username = document.getElementById('loginUsername').value;
+    const password = document.getElementById('loginPassword').value;
+    const errorDiv = document.getElementById('loginError');
+
+    if (!username || !password) {
+        errorDiv.textContent = 'Please enter username and password';
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            errorDiv.textContent = error.error || 'Login failed';
+            return;
+        }
+
+        const data = await response.json();
+        saveAuthToken(data.token);
+        showApp();
+        init();
+    } catch (error) {
+        console.error('Login error:', error);
+        errorDiv.textContent = 'Connection error. Please try again.';
+    }
+}
+
+function handleLogout() {
+    clearAuthToken();
+    document.getElementById('loginUsername').value = '';
+    document.getElementById('loginPassword').value = '';
+    document.getElementById('loginError').textContent = '';
+    showLogin();
+}
+
+function showLogin() {
+    document.getElementById('loginForm').style.display = 'flex';
+    document.getElementById('appContent').style.display = 'none';
+}
+
+function showApp() {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('appContent').style.display = 'block';
+}
+
+function checkAuth() {
+    const token = getAuthToken();
+    if (token) {
+        showApp();
+        init();
+    } else {
+        showLogin();
+    }
+}
+
 // Parse YYYY-MM-DD string as local date (not UTC)
 function parseLocalDate(dateString) {
     const [year, month, day] = dateString.split('-');
@@ -12,12 +94,17 @@ function parseLocalDate(dateString) {
 // Initialize
 async function init() {
     try {
-        const response = await fetch(`${API_URL}/sessions`);
+        const response = await fetch(`${API_URL}/sessions`, {
+            headers: getAuthHeaders()
+        });
+        if (response.status === 401) {
+            showLogin();
+            return;
+        }
         if (!response.ok) throw new Error('Failed to fetch sessions');
         sessions = await response.json();
     } catch (error) {
         console.error('Error fetching sessions:', error);
-        alert('Error connecting to server. Make sure it is running on port 3000');
         sessions = [];
     }
 
@@ -50,16 +137,20 @@ async function addSession() {
     try {
         const response = await fetch(`${API_URL}/sessions`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({ date, distance, duration })
         });
 
+        if (response.status === 401) {
+            showLogin();
+            return;
+        }
         if (!response.ok) throw new Error('Failed to add session');
 
         // Refresh sessions from server
-        const sessionsResponse = await fetch(`${API_URL}/sessions`);
+        const sessionsResponse = await fetch(`${API_URL}/sessions`, {
+            headers: getAuthHeaders()
+        });
         sessions = await sessionsResponse.json();
 
         // Clear inputs
@@ -81,13 +172,20 @@ async function addSession() {
 async function deleteSession(id) {
     try {
         const response = await fetch(`${API_URL}/sessions/${id}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: getAuthHeaders()
         });
 
+        if (response.status === 401) {
+            showLogin();
+            return;
+        }
         if (!response.ok) throw new Error('Failed to delete session');
 
         // Refresh sessions from server
-        const sessionsResponse = await fetch(`${API_URL}/sessions`);
+        const sessionsResponse = await fetch(`${API_URL}/sessions`, {
+            headers: getAuthHeaders()
+        });
         sessions = await sessionsResponse.json();
 
         updateDisplay();
@@ -339,4 +437,4 @@ function getWeekStart(date) {
 }
 
 // Initialize on load
-init();
+checkAuth();
