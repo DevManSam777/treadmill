@@ -1,7 +1,7 @@
 let sessions = [];
 let weeklyChart = null;
 let monthlyChart = null;
-const API_URL = 'http://localhost:3000/api';
+const API_URL = '/api';
 
 // Parse YYYY-MM-DD string as local date (not UTC)
 function parseLocalDate(dateString) {
