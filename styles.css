@@ -227,6 +227,8 @@ tbody tr:hover {
     align-items: center;
     min-height: 100vh;
     background: #f5f5f5;
+    margin: -20px;
+    padding: 20px;
 }
 
 .login-card {
@@ -353,6 +355,11 @@ tbody tr:hover {
 
     .stats-grid {
         grid-template-columns: 1fr 1fr;
+    }
+
+    .login-container {
+        margin: -10px;
+        padding: 10px;
     }
 
     .login-card {
